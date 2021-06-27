@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 FIRST, SECOND, THREE = range(3)
 
 
-
 def generate_password():
     words_text = open('enlist_words.txt', 'r')
     words_list, symbols, a = words_text.read().split(), '-+=*_.,:;', ''
@@ -100,11 +99,34 @@ def start(update: Update, context: CallbackContext):
             InlineKeyboardButton(text='Wanna Play? ', callback_data='game')
         ],
         [
-            InlineKeyboardButton(text='Исходный кот этого бота.', url='')
+            InlineKeyboardButton(text='Исходный код этого бота.', url='https://github.com/DragonDoctor2033'
+                                                                      '/Telegram_Bot/blob/main/Normal_Telegram_Bot.py')
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text(text='Выбери, что хочешь: ', reply_markup=reply_markup)
+    return FIRST
+
+
+def start_over(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    keyboard = [
+        [
+            InlineKeyboardButton(text='Get_iP.', callback_data='Get_iP'),
+            InlineKeyboardButton(text='Узнай.', callback_data='Huj'),
+            InlineKeyboardButton(text='Пароль.', callback_data='password')
+        ],
+        [
+            InlineKeyboardButton(text='Wanna Play? ', callback_data='game')
+        ],
+        [
+            InlineKeyboardButton(text='Исходный код этого бота.', url='https://github.com/DragonDoctor2033'
+                                                                      '/Telegram_Bot/blob/main/Normal_Telegram_Bot.py')
+        ]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    query.edit_message_text(text='Выбери, что хочешь: ', reply_markup=reply_markup)
     return FIRST
 
 
@@ -127,8 +149,8 @@ def password(update: Update, context: CallbackContext):
 
 
 def help_command(update: Update, context: CallbackContext):
-    """Комманда /help"""
-    update.message.reply_text('У Бота имеются разные функции. Тыры-пыры *расписать*')
+    """Команда /help"""
+    update.message.reply_text('Команда /start запускает бота.\nКоманда /help вызывает этот текст.')
 
 
 def end(update: Update, context: CallbackContext):
@@ -138,12 +160,18 @@ def end(update: Update, context: CallbackContext):
     query = update.callback_query
     query.answer()
     query.edit_message_text(text="Спасибо за игру. До скорого!")
-    return ConversationHandler.END
+    keyboard_choose = [
+        [
+            InlineKeyboardButton(text='Да.', callback_data='Y'),
+            InlineKeyboardButton(text='Нет.', callback_data='N')
+        ]
+    ]
+    return THREE
 
 
 def not_recognize(update: Update, context: CallbackContext):
     context.bot.sendMessage(chat_id=update.effective_chat.id,
-                            text='Не понял тебя. Можешь нажать /help, чтобы показать доступные команды')
+                            text='Не понял тебя. Можешь нажать /help, чтобы показать доступные команды.')
 
 
 def main():
@@ -162,7 +190,7 @@ def main():
                 CallbackQueryHandler(game)
             ],
             THREE: [
-                CallbackQueryHandler(end, pattern='^' + 'N' + '$'),
+                CallbackQueryHandler(start_over, pattern='^' + 'N' + '$'),
                 CallbackQueryHandler(choose_player, pattern='^' + 'Y' + '$'),
             ]
         },
