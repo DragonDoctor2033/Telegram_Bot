@@ -69,8 +69,8 @@ def game(update: Update, context: CallbackContext):
     query.answer()
     keyboard_choose = [
         [
-            InlineKeyboardButton(text='Да.', callback_data='Y'),
-            InlineKeyboardButton(text='Нет.', callback_data='N')
+            InlineKeyboardButton(text='Да.', callback_data='choose_player_again'),
+            InlineKeyboardButton(text='Нет.', callback_data='Not_Repeat')
         ]
     ]
     reply_mark = InlineKeyboardMarkup(keyboard_choose)
@@ -141,11 +141,19 @@ def huj(update: Update, context: CallbackContext):
     query.answer()
     query.edit_message_text('Хуй')  # Не поверишь
 
-
+    
 def password(update: Update, context: CallbackContext):
     query = update.callback_query
     query.answer()
-    query.edit_message_text(generate_password())  # Генерирует и шлёт пароль
+    keyboard_choose = [
+        [
+            InlineKeyboardButton(text='Да.', callback_data='password_again'),
+            InlineKeyboardButton(text='Нет.', callback_data='Not_Repeat')
+        ]
+    ]
+    reply_mark = InlineKeyboardMarkup(keyboard_choose)
+    query.edit_message_text(text=f"{generate_password()}\nЕщё один нужен? ", reply_markup=reply_mark)
+    return THREE
 
 
 def help_command(update: Update, context: CallbackContext):
@@ -154,19 +162,10 @@ def help_command(update: Update, context: CallbackContext):
 
 
 def end(update: Update, context: CallbackContext):
-    """Returns `ConversationHandler.END`, which tells the
-    ConversationHandler that the conversation is over.
-    """
     query = update.callback_query
     query.answer()
-    query.edit_message_text(text="Спасибо за игру. До скорого!")
-    keyboard_choose = [
-        [
-            InlineKeyboardButton(text='Да.', callback_data='Y'),
-            InlineKeyboardButton(text='Нет.', callback_data='N')
-        ]
-    ]
-    return THREE
+    query.edit_message_text(text="Спасибо за уделённое время!")
+    return ConversationHandler.END
 
 
 def not_recognize(update: Update, context: CallbackContext):
@@ -190,8 +189,9 @@ def main():
                 CallbackQueryHandler(game)
             ],
             THREE: [
-                CallbackQueryHandler(start_over, pattern='^' + 'N' + '$'),
-                CallbackQueryHandler(choose_player, pattern='^' + 'Y' + '$'),
+                CallbackQueryHandler(start_over, pattern='^' + 'Not_Repeat' + '$'),
+                CallbackQueryHandler(choose_player, pattern='^' + 'choose_player_again' + '$'),
+                CallbackQueryHandler(password, pattern='^' + 'password_again' + '$'),
             ]
         },
         fallbacks=[CommandHandler('start', start)]
