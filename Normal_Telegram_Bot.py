@@ -176,7 +176,7 @@ def end(update: Update, context: CallbackContext):
 
 
 def main():
-    updater = Updater("Your_Token")
+    updater = Updater("Token_Your")
     dispatcher = updater.dispatcher
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
@@ -186,7 +186,6 @@ def main():
                 CallbackQueryHandler(huj, pattern='^' + 'Huj' + '$'),
                 CallbackQueryHandler(password, pattern='^' + 'password' + '$'),
                 CallbackQueryHandler(choose_player, pattern='^' + 'game' + '$'),
-                CallbackQueryHandler(end, pattern='^' + 'end' + '$'),
             ],
             SECOND: [
                 CallbackQueryHandler(game)
