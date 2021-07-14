@@ -4,7 +4,7 @@ import requests
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, ConversationHandler, \
     MessageHandler, Filters
-
+from Token_Bot import Token
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
 )
@@ -15,20 +15,19 @@ FIRST, SECOND, THREE = range(3)
 
 def generate_password():
     words_text = open('enlist_words.txt', 'r')
-    words_list, symbols, a = words_text.read().split(), '-+=*_.,:;', ''
+    words_list, symbols, password_end = words_text.read().split(), '-+=*_.,:;', ''
     words_text.close()
     random_symbol = random.choice(symbols)
     for _ in range(4):
         if random.randint(0, 1) == 1:
-            a += random.choice(words_list) + random_symbol
+            password_end += random.choice(words_list) + random_symbol
         else:
-            a += random.choice(words_list).upper() + random_symbol
-    return a + str(random.randrange(1000, 10000))
+            password_end += random.choice(words_list).upper() + random_symbol
+    return password_end + str(random.randrange(1000, 10000))
 
 
 def get_ip():
-    response = requests.get('https://api.ipify.org/?format=json')
-    return response.json()['ip']
+    return requests.get('https://api.ipify.org/?format=json').json()['ip']
 
 
 def generate_item(number):
@@ -69,20 +68,20 @@ def game(update: Update, context: CallbackContext):
     query.answer()
     keyboard_choose = [
         [
-            InlineKeyboardButton(text='Да.', callback_data='choose_player_again'),
+            InlineKeyboardButton(text='Да.', callback_data='game'),
             InlineKeyboardButton(text='Нет.', callback_data='Not_Repeat')
         ]
     ]
     reply_mark = InlineKeyboardMarkup(keyboard_choose)
     if play_item[0] == item[0]:
         query.edit_message_text(text=f"{item[0]}\nНичья. Хочешь ещё? ", reply_markup=reply_mark)
-        return THREE
+        return FIRST
     elif (play_item[1] == 0 and item[1] == 2) or (play_item[1] > item[1] and not (play_item[1] == 2 and item[1] == 0)):
         query.edit_message_text(text=f"{item[0]}\nВыиграл. Хочешь ещё? ", reply_markup=reply_mark)
-        return THREE
+        return FIRST
     else:
         query.edit_message_text(text=f"{item[0]}\nПроиграл. Хочешь ещё? ", reply_markup=reply_mark)
-        return THREE
+        return FIRST
 
 
 def start(update: Update, context: CallbackContext):
@@ -135,13 +134,29 @@ def start_over(update: Update, context: CallbackContext):
 def send_ip(update: Update, context: CallbackContext):
     query = update.callback_query
     query.answer()
-    query.edit_message_text(text=get_ip())  # Шлёт айпишник
+    keyboard_choose = [
+        [
+            InlineKeyboardButton(text='Да.', callback_data='Get_iP'),
+            InlineKeyboardButton(text='Нет.', callback_data='Not_Repeat')
+        ]
+    ]
+    reply_mark = InlineKeyboardMarkup(keyboard_choose)
+    query.edit_message_text(text=f"{get_ip()}\nЕщё раз надо? ", reply_markup=reply_mark)
+    return FIRST
 
 
 def huj(update: Update, context: CallbackContext):
     query = update.callback_query
     query.answer()
-    query.edit_message_text(text="Хуй")  # Не поверишь
+    keyboard_choose = [
+        [
+            InlineKeyboardButton(text='Да.', callback_data='Huj'),
+            InlineKeyboardButton(text='Нет.', callback_data='Not_Repeat')
+        ]
+    ]
+    reply_mark = InlineKeyboardMarkup(keyboard_choose)
+    query.edit_message_text(text="Хуй\nЕщё раз надо? ", reply_markup=reply_mark)
+    return FIRST
 
 
 def password(update: Update, context: CallbackContext):
@@ -149,13 +164,13 @@ def password(update: Update, context: CallbackContext):
     query.answer()
     keyboard_choose = [
         [
-            InlineKeyboardButton(text='Да.', callback_data='password_again'),
+            InlineKeyboardButton(text='Да.', callback_data='password'),
             InlineKeyboardButton(text='Нет.', callback_data='Not_Repeat')
         ]
     ]
     reply_mark = InlineKeyboardMarkup(keyboard_choose)
     query.edit_message_text(text=f"{generate_password()}\nЕщё один нужен? ", reply_markup=reply_mark)
-    return THREE
+    return FIRST
 
 
 def help_command(update: Update, context: CallbackContext):
@@ -176,7 +191,7 @@ def end(update: Update, context: CallbackContext):
 
 
 def main():
-    updater = Updater("Token_Your")
+    updater = Updater(Token)
     dispatcher = updater.dispatcher
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
@@ -186,14 +201,11 @@ def main():
                 CallbackQueryHandler(huj, pattern='^' + 'Huj' + '$'),
                 CallbackQueryHandler(password, pattern='^' + 'password' + '$'),
                 CallbackQueryHandler(choose_player, pattern='^' + 'game' + '$'),
+                CallbackQueryHandler(end, pattern='^' + 'end' + '$'),
+                CallbackQueryHandler(start_over, pattern='^' + 'Not_Repeat' + '$')
             ],
             SECOND: [
                 CallbackQueryHandler(game)
-            ],
-            THREE: [
-                CallbackQueryHandler(start_over, pattern='^' + 'Not_Repeat' + '$'),
-                CallbackQueryHandler(choose_player, pattern='^' + 'choose_player_again' + '$'),
-                CallbackQueryHandler(password, pattern='^' + 'password_again' + '$'),
             ]
         },
         fallbacks=[CommandHandler('start', start)]
