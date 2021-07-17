@@ -5,12 +5,26 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, ConversationHandler, \
     MessageHandler, Filters
 from Token_Bot import Token
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
-)
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 FIRST, SECOND, THREE = range(3)
+
+keyboard = [
+    [
+        InlineKeyboardButton(text='Узнай.', callback_data='Huj'),
+        InlineKeyboardButton(text='Пароль.', callback_data='password'),
+        InlineKeyboardButton(text='Исходный код этого бота.', url='https://github.com/DragonDoctor2033'
+                                                                  '/Telegram_Bot/blob/main/Normal_Telegram_Bot.py')
+    ],
+    [
+        InlineKeyboardButton(text='Wanna Play? ', callback_data='game')
+    ],
+    [
+        InlineKeyboardButton(text='Закончить общение с ботом.', callback_data='end')
+    ]
+]
+reply_markup = InlineKeyboardMarkup(keyboard)
 
 
 def generate_password():
@@ -88,22 +102,6 @@ def start(update: Update, context: CallbackContext):
     """Отправляет приветсвие с разными кнопками."""
     user = update.message.from_user
     logger.info("User %s started the conversation.", user.first_name)
-    keyboard = [
-        [
-            InlineKeyboardButton(text='Get_iP.', callback_data='Get_iP'),
-            InlineKeyboardButton(text='Узнай.', callback_data='Huj'),
-            InlineKeyboardButton(text='Пароль.', callback_data='password'),
-            InlineKeyboardButton(text='Исходный код этого бота.', url='https://github.com/DragonDoctor2033'
-                                                                      '/Telegram_Bot/blob/main/Normal_Telegram_Bot.py')
-        ],
-        [
-            InlineKeyboardButton(text='Wanna Play? ', callback_data='game')
-        ],
-        [
-            InlineKeyboardButton(text='Закончить общение с ботом.', callback_data='end')
-        ]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text(text='Выбери, что хочешь: ', reply_markup=reply_markup)
     return FIRST
 
@@ -111,38 +109,12 @@ def start(update: Update, context: CallbackContext):
 def start_over(update: Update, context: CallbackContext):
     query = update.callback_query
     query.answer()
-    keyboard = [
-        [
-            InlineKeyboardButton(text='Get_iP.', callback_data='Get_iP'),
-            InlineKeyboardButton(text='Узнай.', callback_data='Huj'),
-            InlineKeyboardButton(text='Пароль.', callback_data='password'),
-            InlineKeyboardButton(text='Исходный код этого бота.', url='https://github.com/DragonDoctor2033'
-                                                                      '/Telegram_Bot/blob/main/Normal_Telegram_Bot.py')
-        ],
-        [
-            InlineKeyboardButton(text='Wanna Play? ', callback_data='game')
-        ],
-        [
-            InlineKeyboardButton(text='Закончить общение с ботом.', callback_data='end')
-        ]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
     query.edit_message_text(text='Выбери, что хочешь: ', reply_markup=reply_markup)
     return FIRST
 
 
 def send_ip(update: Update, context: CallbackContext):
-    query = update.callback_query
-    query.answer()
-    keyboard_choose = [
-        [
-            InlineKeyboardButton(text='Да.', callback_data='Get_iP'),
-            InlineKeyboardButton(text='Нет.', callback_data='Not_Repeat')
-        ]
-    ]
-    reply_mark = InlineKeyboardMarkup(keyboard_choose)
-    query.edit_message_text(text=f"{get_ip()}\nЕщё раз надо? ", reply_markup=reply_mark)
-    return FIRST
+    update.message.reply_text(text=get_ip() + ':32400')
 
 
 def huj(update: Update, context: CallbackContext):
@@ -183,8 +155,14 @@ def not_recognize(update: Update, context: CallbackContext):
                             text='Не понял тебя. Можешь нажать /help, чтобы показать доступные команды.')
 
 
+def speech_to_text(update: Update, context: CallbackContext):
+    query = update.callback_query
+    print(query)
+
+
 def end(update: Update, context: CallbackContext):
     query = update.callback_query
+    print(query)
     query.answer()
     query.edit_message_text(text="Спасибо за уделённое время!")
     return ConversationHandler.END
@@ -197,7 +175,6 @@ def main():
         entry_points=[CommandHandler('start', start)],
         states={
             FIRST: [
-                CallbackQueryHandler(send_ip, pattern='^' + 'Get_iP' + '$'),
                 CallbackQueryHandler(huj, pattern='^' + 'Huj' + '$'),
                 CallbackQueryHandler(password, pattern='^' + 'password' + '$'),
                 CallbackQueryHandler(choose_player, pattern='^' + 'game' + '$'),
@@ -210,8 +187,10 @@ def main():
         },
         fallbacks=[CommandHandler('start', start)]
     )
+    dispatcher.add_handler(CommandHandler('Plex', send_ip, Filters.user(470529631)))
     dispatcher.add_handler(CommandHandler('help', help_command))
     dispatcher.add_handler(conv_handler)
+    dispatcher.add_handler(MessageHandler(Filters.audio, speech_to_text))
     dispatcher.add_handler(MessageHandler(Filters.text, not_recognize))
     updater.start_polling()
     updater.idle()
