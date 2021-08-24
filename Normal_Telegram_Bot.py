@@ -5,6 +5,8 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, ConversationHandler, \
     MessageHandler, Filters
 from Token_Bot import Token
+from bs4 import BeautifulSoup
+
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -40,8 +42,19 @@ def generate_password():
     return password_end + str(random.randrange(1000, 10000))
 
 
-def get_ip():
-    return requests.get('https://api.ipify.org/?format=json').json()['ip']
+def get_respond_delivery(update: Update, context: CallbackContext):
+    some = ''
+    respond = requests.get(f'https://www.omniva.ee/api/search.php?search_barcode={update.message.text}')
+    soup = BeautifulSoup(respond.text, 'html.parser')
+    text = soup.find_all('tbody')
+    for texts in text:
+        texts = list(texts.find_all('td'))[0:3]
+        for result in texts:
+            some += str(result)[4:-5] + ' | '
+    if some:
+        update.message.reply_text(text=str(some[:-3]))
+    else:
+        update.message.reply_text(text='Посылки с таким номером нет. Проверь, что правильно написал.')
 
 
 def generate_item(number):
@@ -114,7 +127,7 @@ def start_over(update: Update, context: CallbackContext):
 
 
 def send_ip(update: Update, context: CallbackContext):
-    update.message.reply_text(text=get_ip() + ':32400')
+    update.message.reply_text(text=requests.get('https://api.ipify.org/?format=json').json()['ip'] + ':32400')
 
 
 def huj(update: Update, context: CallbackContext):
@@ -190,6 +203,7 @@ def main():
     dispatcher.add_handler(CommandHandler('Plex', send_ip, Filters.user(470529631)))
     dispatcher.add_handler(CommandHandler('help', help_command))
     dispatcher.add_handler(conv_handler)
+    dispatcher.add_handler(MessageHandler(Filters.regex('^\w\w\d\d\d\d\d\d\d\d\d\w\w$'), get_respond_delivery))
     dispatcher.add_handler(MessageHandler(Filters.audio, speech_to_text))
     dispatcher.add_handler(MessageHandler(Filters.text, not_recognize))
     updater.start_polling()
