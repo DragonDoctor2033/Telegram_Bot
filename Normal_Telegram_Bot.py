@@ -43,18 +43,19 @@ def generate_password():
 
 
 def get_respond_delivery(update: Update, context: CallbackContext):
-    some = ''
+    result = ''
     respond = requests.get(f'https://www.omniva.ee/api/search.php?search_barcode={update.message.text}')
     soup = BeautifulSoup(respond.text, 'html.parser')
     text = soup.find_all('tbody')
     for texts in text:
         texts = list(texts.find_all('td'))[0:3]
-        for result in texts:
-            some += str(result)[4:-5] + ' | '
-    if some:
-        update.message.reply_text(text=str(some[:-3]))
+        for temp in texts:
+            result += str(temp)[4:-5] + ' | '
+    if result:
+        update.message.reply_text(text=str(result[:-3]))
     else:
-        update.message.reply_text(text='Посылки с таким номером нет. Проверь, что правильно написал.')
+        update.message.reply_text(text='Посылки с таким номером нет. '
+                                       'Проверь, что правильно написал или что она вообще отслеживаемая.')
 
 
 def generate_item(number):
