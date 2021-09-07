@@ -11,6 +11,13 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 FIRST, SECOND, THREE = range(3)
+dictionary = {
+    0: 'Дата данных: ',
+    1: 'За последний день: ',
+    2: 'Всего: ',
+    3: 'За последние 14 дней: ',
+    4: 'На 100 тыс человек: '
+}
 
 keyboard = [
     [
@@ -70,15 +77,15 @@ def generate_item(number):
 def choose_player(update: Update, context: CallbackContext):
     query = update.callback_query
     query.answer()
-    keyboard = [
+    keyboard_choose_player = [
         [
             InlineKeyboardButton(text='Камень.', callback_data='Rock'),
             InlineKeyboardButton(text='Ножницы.', callback_data='Scissors'),
             InlineKeyboardButton(text='Бумага.', callback_data='Paper')
         ]
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    query.edit_message_text(text="Выбери Камень, Ножницы или Бумагу: ", reply_markup=reply_markup)
+    reply_markup_choose_player = InlineKeyboardMarkup(keyboard_choose_player)
+    query.edit_message_text(text="Выбери Камень, Ножницы или Бумагу: ", reply_markup=reply_markup_choose_player)
     return SECOND
 
 
@@ -169,6 +176,21 @@ def not_recognize(update: Update, context: CallbackContext):
                             text='Не понял тебя. Можешь нажать /help, чтобы показать доступные команды.')
 
 
+def send_statistic(update: Update, context: CallbackContext):
+    answer = requests.get('https://opendata.digilugu.ee/opendata_covid19_tests_total.json').text.split()[-2].split(',')[
+             1:]
+    final_output = ''
+    for i in range(5):
+        if answer[i] == answer[0]:
+            final_output += dictionary[i] + answer[i][answer[i].index(':') + 2: -1] + '\n'
+            continue
+        if answer[i] == answer[-1]:
+            final_output += dictionary[i] + answer[i][answer[i].index(':') + 1:-1] + '\n'
+            continue
+        final_output += dictionary[i] + answer[i][answer[i].index(':') + 1:] + '\n'
+    context.bot.sendMessage(chat_id=update.effective_chat.id, text=final_output)
+
+
 def speech_to_text(update: Update, context: CallbackContext):
     query = update.callback_query
     print(query)
@@ -202,6 +224,7 @@ def main():
         fallbacks=[CommandHandler('start', start)]
     )
     dispatcher.add_handler(CommandHandler('Plex', send_ip, Filters.user(470529631)))
+    dispatcher.add_handler(CommandHandler('Covid', send_statistic))
     dispatcher.add_handler(CommandHandler('help', help_command))
     dispatcher.add_handler(conv_handler)
     dispatcher.add_handler(MessageHandler(Filters.regex('^\w\w\d\d\d\d\d\d\d\d\d\w\w$'), get_respond_delivery))
