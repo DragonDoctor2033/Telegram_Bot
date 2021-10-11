@@ -40,13 +40,17 @@ def generate_password():
     words_text = open('enlist_words.txt', 'r')
     words_list, symbols, password_end = words_text.read().split(), '-+=*_.,:;', ''
     words_text.close()
+    flag = True
     random_symbol = random.choice(symbols)
     for _ in range(4):
         if random.randint(0, 1) == 1:
             password_end += random.choice(words_list) + random_symbol
         else:
             password_end += random.choice(words_list).upper() + random_symbol
-    return password_end + str(random.randrange(1000, 10000))
+        if flag and random.randint(0, 1) == 1:
+            password_end += str(random.randrange(1000, 10000))
+            flag = False
+    return password_end
 
 
 def get_respond_delivery(update: Update, context: CallbackContext):
