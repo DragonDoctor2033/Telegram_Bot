@@ -40,16 +40,18 @@ def generate_password():
     words_text = open('enlist_words.txt', 'r')
     words_list, symbols, password_end = words_text.read().split(), '-+=*_.,:;', ''
     words_text.close()
-    flag = True
+    num_used_flag = True
     random_symbol = random.choice(symbols)
-    for _ in range(4):
+    for i in range(4):
         if random.randint(0, 1) == 1:
             password_end += random.choice(words_list) + random_symbol
         else:
             password_end += random.choice(words_list).upper() + random_symbol
-        if flag and random.randint(0, 1) == 1:
+        if num_used_flag and random.randint(0, 1) == 1:
+            password_end += str(random.randrange(1000, 10000)) + random_symbol
+            num_used_flag = False
+        elif i == 3 and num_used_flag:
             password_end += str(random.randrange(1000, 10000))
-            flag = False
     return password_end
 
 
