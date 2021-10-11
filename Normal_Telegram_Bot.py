@@ -183,8 +183,8 @@ def not_recognize(update: Update, context: CallbackContext):
 
 
 def send_statistic(update: Update, context: CallbackContext):
-    answer = requests.get('https://opendata.digilugu.ee/opendata_covid19_tests_total.json').text.split()[-2].split(',')[
-             1:]
+    answer = requests.get('https://opendata.digilugu.ee/opendata_covid19_tests_total.json').text.split(
+                                                                                                    )[-2].split(',')[1:]
     final_output = ''
     for i in range(5):
         if answer[i] == answer[0]:
