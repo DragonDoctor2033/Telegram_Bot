@@ -6,6 +6,7 @@ from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, Callback
     MessageHandler, Filters
 from Token_Bot import Token
 from bs4 import BeautifulSoup
+from datetime import date
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -18,6 +19,12 @@ dictionary = {
     3: 'За последние 14 дней: ',
     4: 'На 100 тыс человек: '
 }
+answer = requests.get('https://opendata.digilugu.ee/opendata_covid19_tests_total.json').text.split(
+                                                                                                    )[-2].split(',')[1:]
+final_output = dictionary[0] + answer[0][answer[0].index(':') + 2: -1] + '\n'
+for i in range(1, 4):
+    final_output += dictionary[i] + answer[i][answer[i].index(':') + 1:] + '\n'
+final_output += dictionary[4] + answer[-1][answer[-1].index(':') + 1:-1] + '\n'
 
 keyboard = [
     [
@@ -182,19 +189,21 @@ def not_recognize(update: Update, context: CallbackContext):
                             text='Не понял тебя. Можешь нажать /help, чтобы показать доступные команды.')
 
 
+def gen_statistic():
+    Temp_Text = dictionary[0] + answer[0][answer[0].index(':') + 2: -1] + '\n'
+    for num in range(1, 4):
+        Temp_Text += dictionary[num] + answer[num][answer[num].index(':') + 1:] + '\n'
+    Temp_Text += dictionary[4] + answer[-1][answer[-1].index(':') + 1:-1] + '\n'
+    return Temp_Text
+
+
 def send_statistic(update: Update, context: CallbackContext):
-    answer = requests.get('https://opendata.digilugu.ee/opendata_covid19_tests_total.json').text.split(
-                                                                                                    )[-2].split(',')[1:]
-    final_output = ''
-    for i in range(5):
-        if answer[i] == answer[0]:
-            final_output += dictionary[i] + answer[i][answer[i].index(':') + 2: -1] + '\n'
-            continue
-        if answer[i] == answer[-1]:
-            final_output += dictionary[i] + answer[i][answer[i].index(':') + 1:-1] + '\n'
-            continue
-        final_output += dictionary[i] + answer[i][answer[i].index(':') + 1:] + '\n'
-    context.bot.sendMessage(chat_id=update.effective_chat.id, text=final_output)
+    current_date = date.today().strftime('%Y-%m-%d')
+    if answer[0][answer[0].index(':') + 2: -1] != current_date[:-2] + str(int(current_date[-2:]) - 1):
+        statistic_text = gen_statistic()
+    else:
+        statistic_text = final_output
+    context.bot.sendMessage(chat_id=update.effective_chat.id, text=statistic_text)
 
 
 def speech_to_text(update: Update, context: CallbackContext):
