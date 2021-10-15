@@ -6,7 +6,8 @@ from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, Callback
     MessageHandler, Filters
 from Token_Bot import Token
 from bs4 import BeautifulSoup
-from datetime import date
+from datetime import datetime
+import codecs
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -19,13 +20,16 @@ dictionary = {
     3: 'За последние 14 дней: ',
     4: 'На 100 тыс человек: '
 }
-answer = requests.get('https://opendata.digilugu.ee/opendata_covid19_tests_total.json').text.split(
-                                                                                                    )[-2].split(',')[1:]
+temp_file_to_store = codecs.open('Temp_Saver_Data.txt', 'w', 'utf-16')
+answer = requests.get('https://opendata.digilugu.ee/opendata_covid19_tests_total.json').text.split()[-2].split(',')[1:]
 final_output = dictionary[0] + answer[0][answer[0].index(':') + 2: -1] + '\n'
 for i in range(1, 4):
     final_output += dictionary[i] + answer[i][answer[i].index(':') + 1:] + '\n'
-final_output += dictionary[4] + answer[-1][answer[-1].index(':') + 1:-1] + '\n'
+final_output += dictionary[4] + answer[-1][answer[-1].index(':') + 1:-1]
+temp_file_to_store.writelines(final_output)
+temp_file_to_store.close()
 
+# To create default value in file put parser out of function
 keyboard = [
     [
         InlineKeyboardButton(text='Узнай.', callback_data='Huj'),
@@ -190,20 +194,27 @@ def not_recognize(update: Update, context: CallbackContext):
 
 
 def gen_statistic():
+    # Gathering info and write it to the file to store
+    Write_New_Data_To_File = codecs.open('Temp_Saver_Data.txt', 'w', 'utf-16')
     Temp_Text = dictionary[0] + answer[0][answer[0].index(':') + 2: -1] + '\n'
     for num in range(1, 4):
         Temp_Text += dictionary[num] + answer[num][answer[num].index(':') + 1:] + '\n'
     Temp_Text += dictionary[4] + answer[-1][answer[-1].index(':') + 1:-1] + '\n'
+    Write_New_Data_To_File.write(Temp_Text)
+    Write_New_Data_To_File.close()
     return Temp_Text
 
 
 def send_statistic(update: Update, context: CallbackContext):
-    current_date = date.today().strftime('%Y-%m-%d')
-    if answer[0][answer[0].index(':') + 2: -1] != current_date[:-2] + str(int(current_date[-2:]) - 1):
-        statistic_text = gen_statistic()
+    current_date = datetime.now().strftime(f'%Y-%m-%d') + '7:35'
+    message_date = str(update.message.date)[:-14] + str(int(str(update.message.date)[11:-12]) + 3) + \
+                   str(update.message.date)[13:-9]
+    if message_date > current_date:
+        context.bot.sendMessage(chat_id=update.effective_chat.id, text=gen_statistic())
+        # Gather new data, if current date if different from stored and re-write it to the file
     else:
-        statistic_text = final_output
-    context.bot.sendMessage(chat_id=update.effective_chat.id, text=statistic_text)
+        Read_Data_From_File = codecs.open('Temp_Saver_Data.txt', 'r', 'utf-16')
+        context.bot.sendMessage(chat_id=update.effective_chat.id, text=Read_Data_From_File.read())
 
 
 def speech_to_text(update: Update, context: CallbackContext):
