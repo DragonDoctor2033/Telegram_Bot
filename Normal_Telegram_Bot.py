@@ -6,7 +6,7 @@ from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, Callback
     MessageHandler, Filters
 from Token_Bot import Token
 from bs4 import BeautifulSoup
-from datetime import datetime
+from datetime import datetime, timedelta
 import codecs
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -206,15 +206,17 @@ def gen_statistic():
 
 
 def send_statistic(update: Update, context: CallbackContext):
-    current_date = datetime.now().strftime(f'%Y-%m-%d') + '7:35'
-    message_date = str(update.message.date)[:-14] + str(int(str(update.message.date)[11:-12]) + 3) + \
-                   str(update.message.date)[13:-9]
-    if message_date > current_date:
+    Read_Data_From_File = codecs.open('Temp_Saver_Data.txt', 'r', 'utf-16')
+    message_date = str(datetime.today() - timedelta(1))
+    Last_Result_Data = Read_Data_From_File.readline()
+    Read_Data_From_File.close()
+    if message_date >= Last_Result_Data[-11:-3] + str(int(Last_Result_Data[-3:]) + 1) + ' 07:35':
         context.bot.sendMessage(chat_id=update.effective_chat.id, text=gen_statistic())
         # Gather new data, if current date if different from stored and re-write it to the file
     else:
         Read_Data_From_File = codecs.open('Temp_Saver_Data.txt', 'r', 'utf-16')
         context.bot.sendMessage(chat_id=update.effective_chat.id, text=Read_Data_From_File.read())
+        Read_Data_From_File.close()
 
 
 def speech_to_text(update: Update, context: CallbackContext):
