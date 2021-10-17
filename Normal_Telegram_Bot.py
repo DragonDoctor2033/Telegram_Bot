@@ -210,7 +210,7 @@ def send_statistic(update: Update, context: CallbackContext):
     message_date = str(datetime.today() - timedelta(1))
     Last_Result_Data = Read_Data_From_File.readline()
     Read_Data_From_File.close()
-    if message_date[:-10] >= Last_Result_Data[-11:-3] + str(int(Last_Result_Data[-3:])) + ' 07:35':
+    if message_date[:-10] >= Last_Result_Data[-11:-3] + str(int(Last_Result_Data[-3:]) + 1) + ' 07:35':
         context.bot.sendMessage(chat_id=update.effective_chat.id, text=gen_statistic())
         # Gather new data, if current date if different from stored and re-write it to the file
     else:
