@@ -53,7 +53,7 @@ def generate_password():
     words_text.close()
     num_used_flag = True
     random_symbol = random.choice(symbols)
-    for i in range(4):
+    for number in range(4):
         if random.randint(0, 1) == 1:
             password_end += random.choice(words_list) + random_symbol
         else:
@@ -61,7 +61,7 @@ def generate_password():
         if num_used_flag and random.randint(0, 1) == 1:
             password_end += str(random.randrange(1000, 10000)) + random_symbol
             num_used_flag = False
-        elif i == 3 and num_used_flag:
+        elif number == 3 and num_used_flag:
             password_end += str(random.randrange(1000, 10000))
     return password_end
 
@@ -195,11 +195,13 @@ def not_recognize(update: Update, context: CallbackContext):
 
 def gen_statistic():
     # Gathering info and write it to the file to store
+    New_Data = requests.get('https://opendata.digilugu.ee/opendata_covid19_tests_total.json').text.split()[-2]\
+                                                                                                         .split(',')[1:]
     Write_New_Data_To_File = codecs.open('Temp_Saver_Data.txt', 'w', 'utf-16')
-    Temp_Text = dictionary[0] + answer[0][answer[0].index(':') + 2: -1] + '\n'
+    Temp_Text = dictionary[0] + New_Data[0][New_Data[0].index(':') + 2: -1] + '\n'
     for num in range(1, 4):
-        Temp_Text += dictionary[num] + answer[num][answer[num].index(':') + 1:] + '\n'
-    Temp_Text += dictionary[4] + answer[-1][answer[-1].index(':') + 1:-1] + '\n'
+        Temp_Text += dictionary[num] + New_Data[num][New_Data[num].index(':') + 1:] + '\n'
+    Temp_Text += dictionary[4] + New_Data[-1][New_Data[-1].index(':') + 1:-1] + '\n'
     Write_New_Data_To_File.write(Temp_Text)
     Write_New_Data_To_File.close()
     return Temp_Text
